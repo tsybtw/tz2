@@ -1,0 +1,93 @@
+---
+title: Database Schema
+slug: /database
+---
+
+# Database Schema
+
+The application uses SQLAlchemy to define and interact with the database. By default, it's configured to use SQLite, with the database file being `conference.db` created in the project root.
+
+## User Model (`app/models/user.py`)
+
+The primary model in the application is the `User` model, which stores information about registered participants.
+
+```python
+# Example from app/models/user.py (illustrative)
+from sqlalchemy import Column, Integer, String, Boolean
+from ..core.database import Base
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, index=True, nullable=False)
+    email = Column(String, unique=True, index=True, nullable=False)
+    hashed_password = Column(String, nullable=False)
+    full_name = Column(String, nullable=True) # Example, if you add this field
+    is_active = Column(Boolean, default=True) # Example, if you add this field
+    # Add other fields as necessary, e.g., registration_date, etc.
+```
+
+**Fields:**
+
+-   `id` (Integer, Primary Key):
+    -   A unique identifier for each user.
+    -   Automatically incremented.
+-   `username` (String, Unique, Indexed):
+    -   The chosen username for the user.
+    -   Must be unique across all users.
+    -   Indexed for faster lookups.
+-   `email` (String, Unique, Indexed):
+    -   The email address of the user.
+    -   Must be unique.
+    -   Indexed for faster lookups.
+-   `hashed_password` (String):
+    -   The user's password, securely hashed using bcrypt.
+    -   Plain text passwords are never stored.
+-   `full_name` (String, Optional):
+    -   The full name of the user (if you decide to implement this).
+-   `is_active` (Boolean, Default: True):
+    -   Indicates if the user account is active (if you implement account activation/deactivation).
+
+## Database Initialization
+
+The database tables are automatically created based on the SQLAlchemy models when the application first starts. This is handled by the `create_db_and_tables()` function (or similar logic) often called in `main.py` or through an initial setup script if you have one.
+
+```python
+# Example from app/core/database.py or main.py (illustrative)
+# from .models import user # Import your models
+# from .database import engine, Base
+
+# def create_db_and_tables():
+#     Base.metadata.create_all(bind=engine)
+
+# Call this function at startup
+# create_db_and_tables()
+```
+
+## Relationships
+
+Currently, the schema focuses on the `User` model. If the application evolves to include other entities (e.g., Conference Sessions, Registrations linking Users to Sessions), appropriate SQLAlchemy models and relationships (one-to-many, many-to-many) would be defined here.
+
+For example, if there were a `Conference` model:
+
+```python
+# Illustrative example of a relationship
+# class Registration(Base):
+#     __tablename__ = "registrations"
+#     id = Column(Integer, primary_key=True)
+#     user_id = Column(Integer, ForeignKey("users.id"))
+#     conference_id = Column(Integer, ForeignKey("conferences.id"))
+#     registration_date = Column(DateTime, default=datetime.utcnow)
+
+#     user = relationship("User", back_populates="registrations")
+#     conference = relationship("Conference", back_populates="registrations")
+
+# In User model:
+# registrations = relationship("Registration", back_populates="user")
+
+# In Conference model:
+# registrations = relationship("Registration", back_populates="conference")
+```
+
+This section should be updated as the database schema evolves. 

@@ -1,0 +1,49 @@
+---
+title: Features
+slug: /features
+---
+
+# Key Features
+
+The Conference Registration System provides a robust set of features for managing conference attendees:
+
+- **User Registration:**
+  - Allows new users to create an account by providing a username, email, and password.
+  - Includes client-side and server-side validation for input data.
+
+- **User Authentication:**
+  - Secure login system for registered users.
+  - Implements JWT (JSON Web Token) based authentication for secure session management.
+  - Tokens are stored as HTTP-only cookies for enhanced security.
+
+- **Password Management:**
+  - Passwords are securely hashed using `bcrypt` before being stored in the database.
+  - Password confirmation during registration to prevent typos.
+
+- **Responsive User Interface:**
+  - The frontend is built using Bootstrap 5, ensuring a responsive design that adapts to various screen sizes (desktops, tablets, and mobile phones).
+  - Clean and intuitive user interface for easy navigation.
+
+- **Participant Listing (Authenticated Users Only):**
+  - Authenticated users can view a list of all registered participants.
+  - This feature is protected and accessible only after successful login.
+
+- **Profile Editing:**
+  - Users can view and update their profile information (e.g., email, full name - if implemented).
+  - Ensures that users can manage their own data.
+
+- **Form Validation:**
+  - Comprehensive validation on both client-side (using HTML5 and JavaScript) and server-side (using Pydantic models in FastAPI) to ensure data integrity.
+
+- **Automated API Documentation:**
+  - FastAPI automatically generates interactive API documentation (Swagger UI and ReDoc).
+  - Accessible via `/api/v1/docs` and `/api/v1/redoc` for easy API exploration and testing.
+
+- **Database Management:**
+  - Uses SQLAlchemy ORM for database interactions.
+  - Supports SQLite by default, making it easy to set up and run.
+  - The database schema is automatically created on the first run of the application.
+
+- **Modular Project Structure:**
+  - Well-organized project structure separating concerns like API endpoints, database operations (CRUD), data models, Pydantic schemas, and core logic.
+  This promotes maintainability and scalability. 

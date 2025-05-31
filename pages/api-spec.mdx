@@ -1,0 +1,184 @@
+# API Specification
+
+## API Overview
+
+The Conference Registration System API follows RESTful principles and uses JSON for request/response payloads. All endpoints are versioned and require authentication unless specified otherwise.
+
+## Base URL
+
+```
+https://api.conference-app.com/v1
+```
+
+## Authentication
+
+### Bearer Token Authentication
+
+```http
+Authorization: Bearer <token>
+```
+
+## API Endpoints
+
+### User Management
+
+#### Create User
+```http
+POST /users
+Content-Type: application/json
+
+{
+  "email": "string",
+  "password": "string",
+  "firstName": "string",
+  "lastName": "string"
+}
+```
+
+#### User Login
+```http
+POST /auth/login
+Content-Type: application/json
+
+{
+  "email": "string",
+  "password": "string"
+}
+```
+
+### Conference Management
+
+#### Create Conference
+```http
+POST /conferences
+Content-Type: application/json
+
+{
+  "title": "string",
+  "description": "string",
+  "startDate": "string",
+  "endDate": "string",
+  "venue": {
+    "name": "string",
+    "address": "string"
+  },
+  "capacity": "number"
+}
+```
+
+#### List Conferences
+```http
+GET /conferences
+Query Parameters:
+  - page: number
+  - limit: number
+  - status: string
+```
+
+### Session Management
+
+#### Create Session
+```http
+POST /conferences/{conferenceId}/sessions
+Content-Type: application/json
+
+{
+  "title": "string",
+  "description": "string",
+  "startTime": "string",
+  "endTime": "string",
+  "room": "string",
+  "capacity": "number"
+}
+```
+
+#### Assign Speaker
+```http
+POST /sessions/{sessionId}/speakers
+Content-Type: application/json
+
+{
+  "userId": "string",
+  "bio": "string",
+  "presentationUrl": "string"
+}
+```
+
+### Registration Management
+
+#### Register for Conference
+```http
+POST /conferences/{conferenceId}/registrations
+Content-Type: application/json
+
+{
+  "ticketId": "string",
+  "sessions": ["string"],
+  "paymentMethod": "string"
+}
+```
+
+## Response Formats
+
+### Success Response
+```json
+{
+  "success": true,
+  "data": {
+    // Response data
+  },
+  "meta": {
+    "timestamp": "string",
+    "requestId": "string"
+  }
+}
+```
+
+### Error Response
+```json
+{
+  "success": false,
+  "error": {
+    "code": "string",
+    "message": "string",
+    "details": {}
+  },
+  "meta": {
+    "timestamp": "string",
+    "requestId": "string"
+  }
+}
+```
+
+## Error Codes
+
+| Code | Description |
+|------|-------------|
+| 400  | Bad Request |
+| 401  | Unauthorized |
+| 403  | Forbidden |
+| 404  | Not Found |
+| 409  | Conflict |
+| 422  | Validation Error |
+| 500  | Server Error |
+
+## Rate Limiting
+
+- Rate limit: 100 requests per minute
+- Rate limit header: `X-RateLimit-Limit`
+- Remaining requests: `X-RateLimit-Remaining`
+- Reset time: `X-RateLimit-Reset`
+
+## Versioning
+
+API versioning is handled through the URL path:
+- Current version: `v1`
+- Format: `/v{version_number}`
+
+## Security
+
+- All endpoints use HTTPS
+- Authentication using JWT tokens
+- CORS enabled for specified origins
+- Request signing for sensitive operations
+- Rate limiting per API key 

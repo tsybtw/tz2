@@ -1,0 +1,167 @@
+# Data Model Specification
+
+## Database Schema
+
+### User Management
+
+```sql
+CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    first_name VARCHAR(100),
+    last_name VARCHAR(100),
+    role VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE user_profiles (
+    user_id UUID PRIMARY KEY REFERENCES users(id),
+    avatar_url VARCHAR(255),
+    bio TEXT,
+    company VARCHAR(255),
+    position VARCHAR(255),
+    phone VARCHAR(50),
+    preferences JSONB,
+    social_links JSONB
+);
+```
+
+### Conference Management
+
+```sql
+CREATE TABLE conferences (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    start_date TIMESTAMP WITH TIME ZONE NOT NULL,
+    end_date TIMESTAMP WITH TIME ZONE NOT NULL,
+    venue_name VARCHAR(255),
+    venue_address TEXT,
+    capacity INTEGER,
+    status VARCHAR(50) NOT NULL,
+    created_by UUID REFERENCES users(id),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE tickets (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    conference_id UUID REFERENCES conferences(id),
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    price DECIMAL(10,2) NOT NULL,
+    quantity INTEGER NOT NULL,
+    start_sale_date TIMESTAMP WITH TIME ZONE,
+    end_sale_date TIMESTAMP WITH TIME ZONE
+);
+```
+
+### Session Management
+
+```sql
+CREATE TABLE sessions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    conference_id UUID REFERENCES conferences(id),
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    start_time TIMESTAMP WITH TIME ZONE NOT NULL,
+    end_time TIMESTAMP WITH TIME ZONE NOT NULL,
+    room VARCHAR(100),
+    capacity INTEGER,
+    track VARCHAR(100),
+    type VARCHAR(50)
+);
+
+CREATE TABLE speakers (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES users(id),
+    session_id UUID REFERENCES sessions(id),
+    bio TEXT,
+    photo_url VARCHAR(255),
+    presentation_url VARCHAR(255)
+);
+```
+
+### Registration Management
+
+```sql
+CREATE TABLE registrations (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    conference_id UUID REFERENCES conferences(id),
+    user_id UUID REFERENCES users(id),
+    ticket_id UUID REFERENCES tickets(id),
+    status VARCHAR(50) NOT NULL,
+    registration_date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    payment_status VARCHAR(50),
+    amount_paid DECIMAL(10,2)
+);
+
+CREATE TABLE session_registrations (
+    registration_id UUID REFERENCES registrations(id),
+    session_id UUID REFERENCES sessions(id),
+    status VARCHAR(50),
+    PRIMARY KEY (registration_id, session_id)
+);
+```
+
+## Data Relationships
+
+### One-to-One Relationships
+- User ↔ UserProfile
+- Registration ↔ Payment
+
+### One-to-Many Relationships
+- Conference → Sessions
+- Conference → Tickets
+- User → Registrations
+- Session → Speakers
+
+### Many-to-Many Relationships
+- Users ↔ Conferences (through Registrations)
+- Sessions ↔ Registrations (through SessionRegistrations)
+- Users ↔ Sessions (through SessionRegistrations)
+
+## Data Validation Rules
+
+### User Data
+- Email must be valid format
+- Password must meet security requirements
+- Phone numbers must be in E.164 format
+
+### Conference Data
+- End date must be after start date
+- Capacity must be positive number
+- Ticket quantity must not exceed conference capacity
+
+### Registration Data
+- Cannot exceed session or conference capacity
+- Cannot register for overlapping sessions
+- Registration date must be within ticket sale period
+
+## Indexing Strategy
+
+### Primary Indexes
+- All UUID primary keys
+- User email
+- Conference dates
+- Registration status
+
+### Secondary Indexes
+- Session start_time, end_time
+- Ticket sale dates
+- Payment status
+- Registration dates
+
+## Data Migration Strategy
+
+### Version Control
+- Database migrations tracked in version control
+- Sequential migration files
+- Rollback procedures
+
+### Data Integrity
+- Foreign key constraints
+- Unique constraints
+- Not null constraints
+- Check constraints 

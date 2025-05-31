@@ -1,0 +1,51 @@
+---
+title: Technologies Used
+slug: /technologies
+---
+
+# Technologies and Tools
+
+This project leverages a modern stack of technologies and tools to deliver a robust and efficient Conference Registration System.
+
+## Backend
+
+- **Python 3.8+:** The core programming language used for the application logic.
+- **FastAPI:** A modern, fast (high-performance) web framework for building APIs with Python 3.7+ based on standard Python type hints.
+  - *Key Features Used:* Automatic data validation, serialization, interactive API documentation (Swagger UI & ReDoc), dependency injection, asynchronous support.
+- **Uvicorn:** An ASGI server used to run the FastAPI application. It provides high performance for asynchronous applications.
+- **SQLAlchemy:** The Python SQL toolkit and Object Relational Mapper (ORM) that gives application developers the full power and flexibility of SQL.
+  - *Usage:* Defines database models and handles all database interactions.
+- **Pydantic:** Data validation and settings management using Python type annotations. FastAPI uses Pydantic models extensively for request and response data validation.
+  - *Requirement:* Requires Rust for compilation of some components, enhancing performance.
+- **Bcrypt:** A library for hashing passwords securely. It's used to protect user credentials.
+- **Python-JOSE:** A JavaScript Object Signing and Encryption (JOSE) technologies implementation in Python, used for creating and verifying JWTs.
+
+## Frontend
+
+- **HTML5:** The standard markup language for creating web pages.
+- **CSS3:** Used for styling the web pages.
+  - `app/static/css/style.css`: Custom styles for the application.
+- **JavaScript:** For client-side interactivity and form validation.
+  - `app/static/js/main.js`: Custom JavaScript for the application.
+- **Bootstrap 5:** A popular CSS framework for developing responsive and mobile-first websites. It provides pre-built components and a grid system for layout.
+- **Jinja2:** A modern and designer-friendly templating engine for Python, used by FastAPI to render HTML templates.
+
+## Database
+
+- **SQLite:** The default relational database management system used. It's a serverless, self-contained, transactional SQL database engine. Easy to set up as it stores the database in a single file (`conference.db`).
+  - *Configurable:* The `DATABASE_URL` environment variable can be used to switch to other SQL databases supported by SQLAlchemy (e.g., PostgreSQL, MySQL).
+
+## Development & Environment
+
+- **Virtual Environments (`venv`):** Used to create isolated Python environments to manage project dependencies.
+- **Pip:** The package installer for Python, used to install packages listed in `requirements.txt`.
+- **Git & GitHub:** Version control system and hosting platform for collaborative development and code management.
+- **Visual Studio with C++ build tools (Windows):** Required for compiling certain Python dependencies that have C++ extensions.
+- **Rust:** Required by Pydantic for performance-critical components.
+
+## Documentation (This Site)
+
+- **Zudoku:** An open-source, highly customizable API documentation framework used to generate this technical specification site.
+- **MDX:** Markdown with JSX, allowing for rich content creation within documentation pages.
+- **GitHub Pages:** Used for deploying and hosting this documentation website.
+- **GitHub Actions:** To automate the build and deployment process of the Zudoku documentation to GitHub Pages. 

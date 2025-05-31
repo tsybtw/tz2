@@ -1,0 +1,101 @@
+---
+title: System Architecture
+slug: /architecture
+---
+
+# System Architecture
+
+The Conference Registration System is designed with a modular, layered architecture, primarily following the structure promoted by the FastAPI framework.
+
+```mermaid
+graph TD
+    A[Client Browser] -->|HTTP Requests (HTML, CSS, JS)| B(Web Server - Uvicorn);
+    B -->|ASGI| C{FastAPI Application};
+
+    subgraph FastAPI Application
+        C --> D{Web Routes (app.web)};
+        D --> E{Templates (Jinja2)};
+        D --> F{API Routers (app.api)};
+        
+        F --> G{API Endpoints (auth.py, users.py)};
+        G --> H{Pydantic Schemas (app.schemas)};
+        G --> I{CRUD Operations (app.crud)};
+        G --> J{Core Logic (app.core)};
+        
+        I --> K{SQLAlchemy Models (app.models)};
+        K --> L[Database (SQLite)];
+        J --> K;
+    end
+
+    E --> A;
+    F -->|JSON Responses| A;
+```
+
+## Components
+
+1.  **Client (Browser):**
+    *   Interacts with the user, rendering HTML pages served by the application.
+    *   Sends HTTP requests for registration, login, profile updates, and viewing participant lists.
+    *   Executes client-side JavaScript for UI enhancements and basic form validation.
+
+2.  **Web Server (Uvicorn):**
+    *   An ASGI server that runs the FastAPI application.
+    *   Handles incoming HTTP requests and forwards them to the FastAPI application.
+
+3.  **FastAPI Application (`app.main.py`):**
+    *   The core of the backend application.
+    *   Initializes the FastAPI app instance, mounts routers, middleware, and static files.
+
+    *   **Web Routes (`app.web.py`):**
+        *   Handles requests that return HTML pages.
+        *   Uses Jinja2 templates to render dynamic content.
+        *   Manages user sessions and access control for web pages.
+
+    *   **API Routers (`app.api/api.py`, `app.api/endpoints/`):**
+        *   Defines the RESTful API endpoints (e.g., `/api/v1/auth/token`, `/api/v1/users/`).
+        *   Handles data processing, validation, and interaction with lower layers for API requests.
+
+    *   **Pydantic Schemas (`app.schemas/`):**
+        *   Define the structure and validation rules for request and response data (JSON).
+        *   Ensure data integrity and consistency throughout the API.
+
+    *   **CRUD Operations (`app.crud/`):**
+        *   Contains functions for Create, Read, Update, Delete operations on the database.
+        *   Abstracts database interaction logic from the API endpoints.
+        *   Interacts directly with SQLAlchemy models.
+
+    *   **SQLAlchemy Models (`app.models/`):**
+        *   Define the database table structures as Python classes.
+        *   Used by SQLAlchemy ORM to map objects to database records.
+
+    *   **Core Logic (`app.core/`):**
+        *   `database.py`: Manages database connection, session setup, and base model for SQLAlchemy.
+        *   `security.py`: Handles password hashing, JWT creation, and token verification.
+
+    *   **Templates (`app.templates/`):**
+        *   Jinja2 HTML templates used to render the user interface.
+
+    *   **Static Files (`app.static/`):**
+        *   Serves CSS stylesheets, JavaScript files, and other static assets.
+
+4.  **Database (SQLite - `conference.db`):**
+    *   Stores all persistent data, including user information (usernames, hashed passwords, email).
+    *   SQLAlchemy ORM manages all interactions with the database.
+
+## Data Flow Example: User Registration
+
+1.  User fills out the registration form in the browser and submits it.
+2.  An HTTP POST request is sent to the `/register` web route (`app.web.py`).
+3.  The web route function might call an internal API endpoint or directly use CRUD operations.
+    *   Let's assume it calls an API endpoint like `/api/v1/users/` (POST).
+4.  The API endpoint (`app.api.endpoints.users.py`) receives the request.
+5.  The request body is validated against a Pydantic schema (`schemas.user.UserCreate`).
+6.  If validation passes, the `security.get_password_hash` function is called to hash the password.
+7.  The CRUD function (`crud.user.create_user`) is called with the user data.
+8.  The CRUD function creates a SQLAlchemy model instance (`models.user.User`) and adds it to the database session.
+9.  SQLAlchemy commits the transaction, saving the new user to the SQLite database.
+10. A success response (or redirection to login) is sent back to the client.
+
+## Project Structure (`conference_app/`)
+
+Your `README.md` provides an excellent overview of the project structure, which is integral to understanding the architecture. Refer to the `Project Structure` section in the main application `README.md` for a detailed file and directory layout. 

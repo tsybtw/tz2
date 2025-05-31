@@ -1,0 +1,63 @@
+---
+title: Security Measures
+slug: /security
+---
+
+# Security Measures
+
+Security is a critical aspect of the Conference Registration System. Several measures are implemented to protect user data and ensure the integrity of the application.
+
+## Authentication
+
+-   **JWT (JSON Web Tokens):**
+    -   User authentication is handled using JWTs. After a successful login, a JWT is generated and sent to the client.
+    -   This token must be included in the `Authorization` header (as a Bearer token) for subsequent requests to protected API endpoints.
+    -   For web routes, the token is typically stored in an HTTP-only cookie, which helps mitigate XSS attacks trying to steal the token.
+    -   The `python-jose` library is used for creating, signing, and decoding JWTs.
+-   **Token Expiration:**
+    -   JWTs are configured with an expiration time (e.g., 30 minutes, as mentioned in your `README.md`). This limits the window of opportunity if a token is compromised.
+    -   The application should handle token expiration gracefully, prompting users to log in again.
+
+## Password Management
+
+-   **Password Hashing:**
+    -   User passwords are never stored in plain text. Instead, they are hashed using the `bcrypt` algorithm via the `passlib` library (which often wraps bcrypt).
+    -   Bcrypt is a strong, adaptive hashing function designed to be slow, making brute-force attacks more difficult.
+-   **Salted Hashes:**
+    -   Bcrypt automatically handles salting, ensuring that identical passwords result in different hashes.
+
+## Data Validation
+
+-   **Server-Side Validation:**
+    -   FastAPI uses Pydantic models to validate all incoming request data for API endpoints. This ensures that data conforms to expected types and constraints before processing.
+    -   This prevents many common injection attacks and ensures data integrity.
+-   **Client-Side Validation:**
+    -   Basic client-side validation is implemented using HTML5 attributes and potentially JavaScript to provide immediate feedback to users and reduce unnecessary server requests. However, client-side validation is primarily for UX and is always backed by robust server-side validation.
+
+## Input Sanitization
+
+-   While Pydantic handles data type validation, explicit input sanitization might be necessary if you were directly constructing SQL queries or rendering user input without proper templating that escapes content.
+-   Using an ORM (SQLAlchemy) significantly reduces the risk of SQL injection, as it typically uses parameterized queries.
+-   Jinja2, when used correctly, auto-escapes variables by default when rendering HTML, which helps prevent XSS attacks.
+
+## API Security
+
+-   **HTTPS:** In a production environment, the application must be served over HTTPS to encrypt data in transit between the client and the server. This is typically handled by a reverse proxy like Nginx or Caddy, or by the hosting platform.
+-   **Rate Limiting (Recommended):** While not explicitly mentioned in the `README.md`, implementing rate limiting on authentication endpoints and other sensitive APIs is a good practice to prevent brute-force attacks and denial-of-service.
+-   **CORS (Cross-Origin Resource Sharing):** If your API is intended to be accessed from different domains, FastAPI provides `CORSMiddleware` to configure allowed origins, methods, and headers.
+
+## Environment Variables
+
+-   **Secret Key:** The `SECRET_KEY` used for signing JWTs and other cryptographic operations is critical. It should be a long, random, and unique string.
+    -   It is configured via an environment variable or a `.env` file, and should **never** be hardcoded directly into the source code or committed to version control (if the `.env` file contains actual secrets, it should be in `.gitignore`).
+-   **Database Credentials:** Similarly, database connection strings (`DATABASE_URL`) containing sensitive information should be managed via environment variables.
+
+## Dependencies
+
+-   **Regular Updates:** Keeping dependencies (Python packages listed in `requirements.txt`) up-to-date is important to patch known vulnerabilities. Tools like `pip-audit` or GitHub's Dependabot can help identify vulnerable dependencies.
+
+## Error Handling
+
+-   The application should avoid leaking sensitive information (e.g., stack traces, internal paths) in error messages to the client, especially in a production environment. FastAPI handles this well by default for unhandled server errors.
+
+This overview covers the key security measures. Continuous vigilance and updates are necessary to maintain a secure application. 

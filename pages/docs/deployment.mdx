@@ -1,0 +1,170 @@
+---
+title: Deployment
+slug: /deployment
+---
+
+# Deployment
+
+This section covers deploying both the main Conference Registration System application and this Zudoku-based technical documentation site.
+
+## Deploying the Main Conference Application
+
+Deploying a FastAPI application typically involves:
+
+1.  **Choosing a Hosting Provider:** Options include:
+    *   PaaS (Platform as a Service): Heroku, Google App Engine, AWS Elastic Beanstalk.
+    *   IaaS (Infrastructure as a Service): AWS EC2, Google Compute Engine, DigitalOcean Droplets (requires more manual server setup).
+    *   Containerization: Docker, Kubernetes.
+
+2.  **Preparing for Production:**
+    *   **Database:** Switch from SQLite to a more robust production database like PostgreSQL or MySQL if high concurrency or scalability is needed. Update `DATABASE_URL`.
+    *   **Web Server:** While Uvicorn is great for development, in production, you might run it with Gunicorn managing Uvicorn workers for better process management and scaling: `gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app`.
+    *   **HTTPS:** Ensure the application is served over HTTPS. This is often handled by a reverse proxy (Nginx, Caddy) or the PaaS provider.
+    *   **Environment Variables:** Securely manage `SECRET_KEY`, `DATABASE_URL`, and other sensitive settings.
+    *   **Static Files:** Consider serving static files via a CDN or a dedicated web server like Nginx for better performance.
+
+3.  **Deployment Process (General Example with Docker):**
+    *   Create a `Dockerfile` for your FastAPI application.
+    *   Build a Docker image.
+    *   Push the image to a container registry (Docker Hub, AWS ECR, Google Container Registry).
+    *   Deploy the image to your chosen hosting platform.
+
+*(This is a general guide. Specific steps vary greatly depending on the chosen hosting solution.)*
+
+## Deploying This Documentation Site (Zudoku with GitHub Pages)
+
+This documentation site is built with Zudoku and can be easily deployed using GitHub Pages.
+
+### Prerequisites
+
+1.  **Node.js and npm/pnpm/yarn:** Ensure you have Node.js installed. Zudoku uses npm/pnpm/yarn for package management.
+    The `tz/package.json` is set up assuming `npm` or `pnpm` (Zudoku examples often use `pnpm`).
+2.  **GitHub Repository:** Your project should be hosted on GitHub.
+
+### Local Setup & Build (inside the `tz` directory)
+
+1.  **Navigate to the `tz` directory:**
+    ```bash
+    cd tz
+    ```
+
+2.  **Install Dependencies:**
+    ```bash
+    npm install 
+    # or if you prefer pnpm:
+    # pnpm install
+    ```
+
+3.  **Copy OpenAPI Specification:**
+    Make sure your actual `openapi.json` from your running FastAPI app (`http://localhost:8000/api/v1/openapi.json`) is copied to `tz/openapi.json`.
+
+4.  **Build the Documentation Site:**
+    ```bash
+    npm run build
+    # or
+    # pnpm build
+    ```
+    This command will generate the static site in a `dist` or `build` directory (Zudoku typically outputs to `.zudoku/dist` or similar, check Zudoku docs for exact path if needed, but the GitHub Action will handle this).
+
+### Setting up GitHub Pages
+
+1.  **Repository Settings:**
+    *   Go to your GitHub repository.
+    *   Click on "Settings" -> "Pages".
+    *   Under "Build and deployment", for "Source", select "GitHub Actions".
+
+2.  **Create GitHub Actions Workflow:**
+    Create a file named `.github/workflows/deploy-zudoku-docs.yml` in the **root** of your project (not inside the `tz` directory) with the content provided in the next section.
+
+### GitHub Actions Workflow File
+
+Create the file `.github/workflows/deploy-zudoku-docs.yml`:
+
+```yaml
+name: Deploy Zudoku Docs to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main # Or your default branch
+    paths:
+      - 'tz/**' # Only run if files in tz/ change
+      - '.github/workflows/deploy-zudoku-docs.yml' # Or if the workflow itself changes
+  workflow_dispatch: # Allows manual triggering
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./tz # Run all commands in the tz directory
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18' # Or a newer LTS version
+          cache: 'npm' # Or pnpm/yarn if you configured package.json for them
+          cache-dependency-path: tz/package-lock.json # Or pnpm-lock.yaml / yarn.lock
+
+      - name: Install dependencies
+        run: npm install # or pnpm install / yarn install
+
+      - name: Build Zudoku site
+        run: npm run build # or pnpm build / yarn build
+        env:
+          # If Zudoku needs a base path for GitHub Pages (e.g., /repository-name/)
+          # Set this if your site is deployed to <username>.github.io/<repository-name>/
+          # BASE_PATH: /${{ github.event.repository.name }}
+          # Check Zudoku documentation if it automatically handles base path or needs this env var.
+          # For root deployment (<username>.github.io), BASE_PATH is usually not needed or should be '/'
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Zudoku's build output directory
+          # This path might need adjustment based on Zudoku's actual output. 
+          # Common paths are 'build', 'dist', or '.zudoku/dist'. Verify this with Zudoku docs.
+          path: ./tz/.zudoku/dist # Default for Zudoku CLI, verify!
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+```
+
+**Explanation of the Workflow:**
+
+-   **Triggers:** Runs on pushes to `main` if files within the `tz/` directory or the workflow file itself change, and allows manual triggers.
+-   **Permissions:** Sets necessary permissions for deploying to GitHub Pages.
+-   **Environment:** Configures the GitHub Pages deployment environment.
+-   **Working Directory:** Sets the default working directory to `./tz` for most steps.
+-   **Checkout:** Checks out your repository code.
+-   **Setup Node.js:** Sets up the specified Node.js version and configures caching for dependencies.
+-   **Install Dependencies:** Installs Zudoku and other dependencies using `npm install` (adjust if using pnpm/yarn) inside the `tz` directory.
+-   **Build Zudoku Site:** Runs `npm run build` (adjust if needed) to generate the static documentation site. 
+    -   **`BASE_PATH`:** If your GitHub Pages site is at `https://<username>.github.io/<repository-name>/`, Zudoku might need a base path. The commented-out `BASE_PATH` environment variable shows how you might set this. You need to check Zudoku's documentation on how it handles base paths for sub-path deployments. If your site is `https://<username>.github.io/` (i.e., a repository named `<username>.github.io`), you likely don't need `BASE_PATH` or it should be `/`.
+-   **Setup Pages:** Configures the Pages deployment.
+-   **Upload Artifact:** Uploads the built Zudoku site (from `tz/.zudoku/dist` - **verify this path!**) as an artifact.
+-   **Deploy to GitHub Pages:** Deploys the uploaded artifact to GitHub Pages.
+
+### After Committing the Workflow
+
+1.  Commit the `.github/workflows/deploy-zudoku-docs.yml` file and all the files in the `tz/` directory.
+2.  Push these changes to your `main` branch on GitHub.
+3.  Go to the "Actions" tab in your GitHub repository. You should see the workflow running.
+4.  Once the workflow completes successfully, your documentation site will be available at the URL provided in your GitHub Pages settings (usually `https://<your-username>.github.io/<your-repository-name>/` or `https://<custom-domain>` if configured).
+
+> **Important:** The `path` in the `Upload artifact` step (`path: ./tz/.zudoku/dist`) is critical. This must be the exact directory where Zudoku outputs its built static files, relative to the workspace root. Double-check Zudoku's build output location. I've used a common default for Zudoku CLI, but it can vary. If `npm run build` (or `pnpm build`) inside the `tz` directory creates, for example, a `tz/dist` or `tz/build` folder, then the path should be `tz/dist` or `tz/build` respectively. 
