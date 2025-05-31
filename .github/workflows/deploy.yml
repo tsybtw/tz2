@@ -38,7 +38,7 @@ jobs:
       # 5) (Опционально) Отключаем Jekyll, чтобы никакие underscore-папки не отбрасывались
       - name: Create .nojekyll
         run: |
-          cd dist/marketplace-docs
+          cd dist/tz2
           touch .nojekyll
 
       # 6) Конфигурируем Pages
@@ -49,7 +49,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./dist/marketplace-docs
+          path: ./dist/tz2
 
       # 8) Деплоим на GitHub Pages
       - name: Deploy to GitHub Pages
